@@ -171,7 +171,7 @@ export const LastNameIcon = styled(FaUserAlt)`
   ${IconStyle}
 `;
 
-//toggle the password visi
+//password visibility
 export const ToggleButton = styled.button`
   position: absolute;
   right: 10px;

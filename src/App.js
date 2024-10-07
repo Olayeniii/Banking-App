@@ -11,6 +11,8 @@ import Payment from './components/Payment';
 import Header from './components/Header';
 import AccountForm from './components/AccountForm';
 import Footer from './components/Footer';
+import FxSales from './components/FxSales';
+
 
 const AppContainer = styled.div`
   max-width: 1200px;
@@ -31,6 +33,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/transactions" element={<TransactionList />} />
           <Route path="/payment" element={<Payment />} />
+          <Route path= "/fx-sales" element={<FxSales/>}/>
         </Routes>
       </AppContainer>
       <Footer />

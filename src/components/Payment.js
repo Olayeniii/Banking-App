@@ -37,7 +37,6 @@ const Payment = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle payment logic
   };
 
   return (

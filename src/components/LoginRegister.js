@@ -40,16 +40,22 @@ const LoginRegister = () => {
     e.preventDefault();
     
     const endpoint = isLogin ? 'http://localhost:5000/login' : 'http://localhost:5000/register';
-
+  
     try {
+      // Post the form data (either for login or registration)
       const response = await axios.post(endpoint, formData);
       const token = response.data.token;
+  
+      // Store the token in localStorage for later authenticated requests
       localStorage.setItem('authToken', token);
+  
+      // Navigate to the appropriate frontend route
       navigate(isLogin ? '/dashboard' : '/create-account');
     } catch (error) {
       console.error('Error:', error.response ? error.response.data : error.message);
     }
   };
+  
 
   const toggleLoginRegister = () => {
     setIsLogin(!isLogin);
