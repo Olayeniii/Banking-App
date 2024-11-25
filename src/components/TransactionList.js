@@ -1,51 +1,63 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import axios from 'axios';
 
-const Container = styled.div`
+// Styling
+const TransactionListContainer = styled.div`
   padding: 20px;
-`;
+  background: #f7f7f7;
+  min-height: 100vh;
 
-const Card = styled.div`
-  background: ${(props) => props.theme.colors.card};
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-`;
+  h2 {
+    margin-bottom: 20px;
+  }
 
-const CardContent = styled.div`
-  flex: 1;
-  min-width: 200px;
-  margin-right: 10px;
+  ul {
+    list-style-type: none;
+    padding: 0;
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      background: white;
+    }
+  }
 `;
 
 const TransactionList = () => {
   const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:3001/api/transactions').then((response) => {
-      setTransactions(response.data);
-    });
+    // Fetch all transactions
+    const fetchTransactions = async () => {
+      try {
+        const response = await axios.get('/api/all-transactions');
+        setTransactions(response.data);
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+      }
+    };
+
+    fetchTransactions();
   }, []);
 
   return (
-    <Container>
-      <h2>Transactions</h2>
-      {transactions.map((transaction) => (
-        <Card key={transaction.id}>
-          <CardContent>
-            <p>Date: {transaction.date}</p>
-            <p>Description: {transaction.description}</p>
-            <p>Amount: ${transaction.amount.toLocaleString()}</p>
-          </CardContent>
-        </Card>
-      ))}
-    </Container>
+    <TransactionListContainer>
+      <h2>All Transactions</h2>
+      <ul>
+        {transactions.map((transaction) => (
+          <li key={transaction.id}>
+            <span>{transaction.description}</span>
+            <span>${transaction.amount.toFixed(2)}</span>
+            <span>{transaction.date}</span>
+          </li>
+        ))}
+      </ul>
+    </TransactionListContainer>
   );
 };
 

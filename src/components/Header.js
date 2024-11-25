@@ -5,19 +5,17 @@ import logo from '../images/Tredils.jpg';
 const HeaderContainer = styled.header`
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: ${(props) => (props.alignCenter ? 'center' : 'flex-start')};
   padding: 20px;
   background: ${(props) => props.theme.colors.primary};
   color: ${(props) => props.theme.colors.secondary};
-  width: 100%;
+  width: ${(props) => (props.fullWidth ? '100%' : 'auto')};
   box-sizing: border-box;
-  margin-bottom: 20px; 
-  position: relative; 
 `;
 
 const Logo = styled.img`
   height: 50px;
-  margin-right: 20px;
+  margin-right: ${(props) => (props.showName ? '20px' : '0')};
 `;
 
 const BankName = styled.h1`
@@ -25,13 +23,14 @@ const BankName = styled.h1`
   font-size: 24px;
   font-weight: normal;
   margin: 0;
-  color: ${(props) => props.theme.colors.secondary}; 
+  display: ${(props) => (props.showName ? 'block' : 'none')};
+  color: ${(props) => props.theme.colors.secondary};
 `;
 
-const Header = () => (
-  <HeaderContainer>
-    <Logo src={logo} alt="Tresdil Bank Logo" />
-    <BankName>Tresdils</BankName>
+const Header = ({ showLogo = true, showName = true, alignCenter = false, fullWidth = false }) => (
+  <HeaderContainer alignCenter={alignCenter} fullWidth={fullWidth}>
+    {showLogo && <Logo src={logo} alt="Tresdils Bank Logo" showName={showName} />}
+    {showName && <BankName>Tresdils</BankName>}
   </HeaderContainer>
 );
 

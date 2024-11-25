@@ -1,107 +1,147 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import axios from 'axios';
 import styled from 'styled-components';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import Header from './Header'; // Reusable header component
 
-// components styling
+// Styling
 const DashboardContainer = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  height: 100vh;
   background-color: #f7f7f7;
-  padding: 40px;
-  min-height: 100vh;
-  max-width: 1200px;
-  margin: 0 auto;
 `;
 
-const Header = styled.div`
+const Sidebar = styled.nav`
+  width: 250px;
+  background-color: ${(props) => props.theme.colors.primary};
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+`;
+
+const NavItems = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const NavItem = styled.div`
+  padding: 10px 20px;
+  margin: 5px 0;
+  font-size: 16px;
+  cursor: pointer;
+  color: ${(props) => (props.active ? '#4caf50' : '#fff')};
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+`;
+
+const MainContent = styled.div`
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+`;
+
+const DashboardHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
-  padding-bottom: 20px;
-  margin-bottom: 30px;
-  border-bottom: 2px solid #ddd;
+  margin-bottom: 20px;
 `;
 
 const WelcomeMessage = styled.h2`
   font-family: 'Orbitron', sans-serif;
   color: ${(props) => props.theme.colors.primary};
-  font-size: 28px;
+  font-size: 24px;
 `;
 
 const AccountDetails = styled.div`
-  font-family: 'Orbitron', sans-serif;
-  color: #666;
   text-align: right;
-`;
-
-const AccountInfo = styled.p`
-  margin: 5px 0;
+  color: #666;
 `;
 
 const BalanceSection = styled.div`
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
+`;
+
+const Widget = styled.div`
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+`;
+
+const PaymentWidget = styled(Widget)`
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  width: 100%;
-  margin-bottom: 40px;
 `;
 
-const BalanceLabel = styled.h3`
-  font-family: 'Orbitron', sans-serif;
-  font-size: 20px;
-  color: ${(props) => props.theme.colors.primary};
+const StatisticWidget = styled(Widget)`
+  p {
+    font-size: 18px;
+    color: #4caf50;
+    margin: 0;
+  }
 `;
 
-const BookBalance = styled.span`
-  font-size: 20px;
-  font-family: 'Orbitron', sans-serif;
-  color: #333;
-`;
+const RecentTransactions = styled.div`
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 
-const ActionButtons = styled.div`
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  margin-bottom: 30px;
+  h3 {
+    margin-bottom: 20px;
+  }
+
+  ul {
+    list-style-type: none;
+    padding: 0;
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 8px;
+    }
+  }
+
+  button {
+    background: ${(props) => props.theme.colors.primary};
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 20px;
+    width: 100%;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
 `;
 
 const Button = styled.button`
   background-color: ${(props) => props.theme.colors.primary};
   color: #fff;
-  padding: 15px 30px;
+  padding: 10px;
   border: none;
   border-radius: 8px;
-  font-size: 10px;
   cursor: pointer;
-  transition: background-color 0.3s;
-  flex: 1;
-  margin: 0 10px;
-
   &:hover {
-    background-color: ${(props) => props.theme.colors.secondary};
+    opacity: 0.9;
   }
-`;
-
-const ShortcutsSection = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 40px;
-  width: 100%;
-`;
-
-const ShortcutButton = styled(Button)`
-  background-color: #e0e0e0;
-  color: ${(props) => props.theme.colors.primary};
-  border-radius: 50%;
-  width: 80px;
-  height: 80px;
-  font-size: 14px;
-  text-align: center;
-  padding: 20px;
 `;
 
 const ModalOverlay = styled.div`
@@ -110,35 +150,34 @@ const ModalOverlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
 `;
 
 const ModalContent = styled.div`
-  background-color: #fff;
-  padding: 30px;
+  background: white;
+  padding: 20px;
   border-radius: 8px;
   width: 400px;
   text-align: center;
 `;
 
-// Dashboard Component
 const Dashboard = () => {
   const [balance, setBalance] = useState(0);
   const [accounts, setAccounts] = useState([]);
   const [firstName, setFirstName] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedAccountNumber, setSelectedAccountNumber] = useState(null); 
   const [fundAmount, setFundAmount] = useState('');
+  const [recentTransactions, setRecentTransactions] = useState([]);
   const navigate = useNavigate();
 
   const fetchDashboardData = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken');
       if (!token) {
-        navigate('/'); 
+        navigate('/');
         return;
       }
       const response = await axios.get('http://localhost:5000/dashboard', {
@@ -146,94 +185,141 @@ const Dashboard = () => {
       });
       setBalance(response.data.totalBalance || 0);
       setAccounts(response.data.accounts || []);
-      setFirstName(response.data.firstName || ''); 
+      setFirstName(response.data.firstName || '');
     } catch (error) {
-      console.error('Error fetching dashboard data:', error.response || error.message);
+      console.error('Error fetching dashboard data:', error);
       if (error.response && error.response.status === 401) {
         navigate('/');
       }
     }
   }, [navigate]);
 
+  const fetchRecentTransactions = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get('http://localhost:5000/api/recent-transactions', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setRecentTransactions(response.data); 
+    } catch (error) {
+      console.error('Error fetching recent transactions:', error);
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
+    fetchRecentTransactions();
   }, [fetchDashboardData]);
 
-  const openFundAccountModal = (accountNumber) => {
-    setSelectedAccountNumber(accountNumber);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedAccountNumber(null);
-    setFundAmount('');
-  };
+  const openFundAccountModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
   const handleFundAccount = async () => {
-    if (!fundAmount || isNaN(fundAmount) || fundAmount <= 0) {
-      alert("Please enter a valid amount.");
-      return;
-    }
     try {
-      const token = localStorage.getItem("authToken");
+      const token = localStorage.getItem('authToken');
       await axios.post(
-        'http://localhost:5000/fund-account', 
-        { accountNumber: selectedAccountNumber, amount: parseFloat(fundAmount) },
+        'http://localhost:5000/fund-account',
+        { amount: parseFloat(fundAmount) },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert('Account funded successfully!');
-      fetchDashboardData();  
-      closeModal();  
+      fetchDashboardData();
+      closeModal();
     } catch (error) {
-      console.error('Error funding account:', error.response || error.message);
-      alert('Failed to fund the account. Please try again.');
+      console.error('Error funding account:', error);
+      alert('Failed to fund account.');
     }
   };
 
+  
+
   return (
     <DashboardContainer>
-      <Header>
-        <WelcomeMessage>Hello, {firstName}!</WelcomeMessage>
-        {accounts.length > 0 ? (
+      <Sidebar>
+        <Header showLogo showName={false} /> {/* Logo in Sidebar */}
+        <NavItems>
+          <NavItem active>Dashboard</NavItem>
+          <NavItem>Wallet</NavItem>
+          <NavItem>Messages</NavItem>
+          <NavItem>Reports</NavItem>
+          <NavItem>Settings</NavItem>
+        </NavItems>
+        <NavItem onClick={() => navigate('/logout')}>Logout</NavItem>
+      </Sidebar>
+
+      {/* Main Content */}
+      <MainContent>
+        <DashboardHeader>
+          <WelcomeMessage>Welcome, {firstName}!</WelcomeMessage>
           <AccountDetails>
-            <AccountInfo>Account Type: {accounts[0].accountType}</AccountInfo>
-            <AccountInfo>Account Number: {accounts[0].accountNumber}</AccountInfo>
+            {accounts.length > 0 ? (
+              <>
+                <p>Account Type: {accounts[0].accountType}</p>
+                <p>Account Number: {accounts[0].accountNumber}</p>
+              </>
+            ) : (
+              <p>Loading account details...</p>
+            )}
           </AccountDetails>
-        ) : (
-          <AccountDetails>Loading account details...</AccountDetails>
+        </DashboardHeader>
+
+        <BalanceSection>
+  <div>
+    <h3>Total Balance:</h3>
+    <p>
+    ${parseFloat(balance).toLocaleString()}
+    </p>
+  </div>
+</BalanceSection>
+
+
+{/* Widgets */}
+<div>
+    <PaymentWidget>
+      <h3>Payments</h3>
+      <Button onClick={openFundAccountModal}>Fund Account</Button>
+      <Button onClick={() => navigate('/transfer')}>Transfer</Button>
+    </PaymentWidget>
+
+    <StatisticWidget>
+      <h3>Statistics</h3>
+      <p>.....</p>
+    </StatisticWidget>
+
+    <RecentTransactions>
+      <h3>Recent Transactions</h3>
+      <ul>
+        {recentTransactions.map((transaction) => (
+          <li key={transaction.id}>
+            <span>{transaction.description}</span>
+            <span>${transaction.amount.toFixed(2)}</span>
+          </li>
+        ))}
+      </ul>
+      <button onClick={() => navigate('/transactions')}>View All Transactions</button>
+    </RecentTransactions>
+  </div>
+
+        {isModalOpen && (
+          <ModalOverlay>
+            <ModalContent>
+              <h2>Fund Account</h2>
+              <input
+                type="number"
+                value={fundAmount}
+                onChange={(e) => setFundAmount(e.target.value)}
+                placeholder="Enter amount"
+              />
+              <div>
+                <Button onClick={handleFundAccount}>Submit</Button>
+                <Button onClick={closeModal} style={{ backgroundColor: '#ff4d4d' }}>
+                  Cancel
+                </Button>
+              </div>
+            </ModalContent>
+          </ModalOverlay>
         )}
-      </Header>
-
-      <BalanceSection>
-        <BalanceLabel>Book Balance:</BalanceLabel>
-        <BookBalance>${balance.toLocaleString()}</BookBalance>
-      </BalanceSection>
-
-      <ActionButtons>
-        <Button onClick={() => openFundAccountModal(accounts.length > 0 ? accounts[0].account_id : null)}>
-          Fund Account
-        </Button>
-        <Button onClick={() => navigate('/transfer')}>Transfer</Button>
-        <Button onClick={() => navigate('/fx-sales')}>FX Sales</Button>
-      </ActionButtons>
-
-      <ShortcutsSection>
-        <ShortcutButton onClick={() => navigate('/transactions')}>Transactions</ShortcutButton>
-        <ShortcutButton>Buy airtime</ShortcutButton>
-        <ShortcutButton>Buy data</ShortcutButton>
-      </ShortcutsSection>
-
-      {isModalOpen && (
-        <ModalOverlay>
-          <ModalContent>
-            <h2>Fund Account</h2>
-            <input type="number" placeholder="Enter amount" value={fundAmount} onChange={(e) => setFundAmount(e.target.value)} />
-            <Button onClick={handleFundAccount}>Submit</Button>
-            <Button onClick={closeModal}>Cancel</Button>
-          </ModalContent>
-        </ModalOverlay>
-      )}
+      </MainContent>
     </DashboardContainer>
   );
 };
