@@ -7,18 +7,25 @@ import Header from './Header'; // Reusable header component
 // Styling
 const DashboardContainer = styled.div`
   display: flex;
-  height: 100vh;
+  width: 100%; 
   background-color: #f7f7f7;
+  padding: 0;
+  margin: 0;
+  height: 100vh;
 `;
 
 const Sidebar = styled.nav`
   width: 250px;
+  height: 100%;
   background-color: ${(props) => props.theme.colors.primary};
   color: white;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 20px;
+  position: fixed;
+  left: 0;
+  top: 0;
 `;
 
 const NavItems = styled.div`
@@ -38,9 +45,10 @@ const NavItem = styled.div`
 `;
 
 const MainContent = styled.div`
-  flex: 1;
+  flex-grow: 1;
   padding: 20px;
   overflow-y: auto;
+  margin-left: 250px;
 `;
 
 const DashboardHeader = styled.div`
@@ -57,8 +65,14 @@ const WelcomeMessage = styled.h2`
 `;
 
 const AccountDetails = styled.div`
+  font-size: 15px;
+  font-family: 'Orbitron', sans-serif;
   text-align: right;
   color: #666;
+`;
+
+const AccountInfo = styled.p`
+  margin: 5px 0;
 `;
 
 const BalanceSection = styled.div`
@@ -68,6 +82,18 @@ const BalanceSection = styled.div`
   margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
+`;
+
+const BalanceLabel = styled.h3`
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  color: ${(props) => props.theme.colors.primary};
+`;
+
+const TotalBalance = styled.span`
+  font-size: 20px;
+  font-family: 'Orbitron', sans-serif;
+  color: #333;
 `;
 
 const Widget = styled.div`
@@ -81,7 +107,7 @@ const Widget = styled.div`
 const PaymentWidget = styled(Widget)`
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: left;
 `;
 
 const StatisticWidget = styled(Widget)`
@@ -132,15 +158,28 @@ const RecentTransactions = styled.div`
   }
 `;
 
+const ActionButtons = styled.div`
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 30px;
+`;
+
+
 const Button = styled.button`
   background-color: ${(props) => props.theme.colors.primary};
   color: #fff;
-  padding: 10px;
+  padding: 15px 30px;
   border: none;
   border-radius: 8px;
+  font-size: 10px;
   cursor: pointer;
+  transition: background-color 0.3s;
+  flex: 1;
+  margin: 0 10px;
+
   &:hover {
-    opacity: 0.9;
+    background-color: rgba(0, 123, 255, 0.8);
   }
 `;
 
@@ -169,6 +208,7 @@ const Dashboard = () => {
   const [accounts, setAccounts] = useState([]);
   const [firstName, setFirstName] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAccountNumber, setSelectedAccountNumber] = useState(null);
   const [fundAmount, setFundAmount] = useState('');
   const [recentTransactions, setRecentTransactions] = useState([]);
   const navigate = useNavigate();
@@ -197,7 +237,7 @@ const Dashboard = () => {
   const fetchRecentTransactions = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get('http://localhost:5000/api/recent-transactions', {
+      const response = await axios.get('http://localhost:5000/recent-transactions', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRecentTransactions(response.data); 
@@ -206,20 +246,31 @@ const Dashboard = () => {
     }
   };
 
+
   useEffect(() => {
     fetchDashboardData();
     fetchRecentTransactions();
   }, [fetchDashboardData]);
 
-  const openFundAccountModal = () => setIsModalOpen(true);
+  const openFundAccountModal = (accountNumber) => {
+    setSelectedAccountNumber(accountNumber);
+    setIsModalOpen(true);
+  };
   const closeModal = () => setIsModalOpen(false);
 
   const handleFundAccount = async () => {
+
+    if (!fundAmount || isNaN(fundAmount) || fundAmount <= 0) {
+      alert("Please enter a valid amount.");
+      return;
+    }
+
     try {
       const token = localStorage.getItem('authToken');
+      console.log({ accountNumber: selectedAccountNumber, amount: parseFloat(fundAmount) },);
       await axios.post(
         'http://localhost:5000/fund-account',
-        { amount: parseFloat(fundAmount) },
+        { accountNumber: selectedAccountNumber, amount: parseFloat(fundAmount) },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert('Account funded successfully!');
@@ -254,8 +305,8 @@ const Dashboard = () => {
           <AccountDetails>
             {accounts.length > 0 ? (
               <>
-                <p>Account Type: {accounts[0].accountType}</p>
-                <p>Account Number: {accounts[0].accountNumber}</p>
+                <AccountInfo>Account Type: {accounts[0].accountType}</AccountInfo>
+                <AccountInfo>Account Number: {accounts[0].accountNumber}</AccountInfo>
               </>
             ) : (
               <p>Loading account details...</p>
@@ -265,10 +316,10 @@ const Dashboard = () => {
 
         <BalanceSection>
   <div>
-    <h3>Total Balance:</h3>
-    <p>
+    <BalanceLabel>Total Balance:</BalanceLabel>
+    <TotalBalance>
     ${parseFloat(balance).toLocaleString()}
-    </p>
+    </TotalBalance>
   </div>
 </BalanceSection>
 
@@ -277,8 +328,10 @@ const Dashboard = () => {
 <div>
     <PaymentWidget>
       <h3>Payments</h3>
-      <Button onClick={openFundAccountModal}>Fund Account</Button>
+      <ActionButtons>
+      <Button onClick={() => openFundAccountModal(accounts.length > 0 ? accounts[0].accountNumber : null)}>Fund Account</Button>
       <Button onClick={() => navigate('/transfer')}>Transfer</Button>
+      </ActionButtons>
     </PaymentWidget>
 
     <StatisticWidget>
@@ -292,7 +345,7 @@ const Dashboard = () => {
         {recentTransactions.map((transaction) => (
           <li key={transaction.id}>
             <span>{transaction.description}</span>
-            <span>${transaction.amount.toFixed(2)}</span>
+            <span>${parseFloat(transaction.amount).toLocaleString()}</span>
           </li>
         ))}
       </ul>

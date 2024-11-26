@@ -5,32 +5,45 @@ import logo from '../images/Tredils.jpg';
 const HeaderContainer = styled.header`
   display: flex;
   align-items: center;
-  justify-content: ${(props) => (props.alignCenter ? 'center' : 'flex-start')};
+  justify-content: ${(props) => (props.alignCenter ? 'center' : 'space-between')};
   padding: 20px;
   background: ${(props) => props.theme.colors.primary};
   color: ${(props) => props.theme.colors.secondary};
-  width: ${(props) => (props.fullWidth ? '100%' : 'auto')};
+  width: 100%;
   box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    flex-direction: column; 
+    text-align: center;
+    padding: 15px;
+  }
 `;
 
 const Logo = styled.img`
   height: 50px;
-  margin-right: ${(props) => (props.showName ? '20px' : '0')};
+  margin-right: 20px;
+
+  @media (max-width: 768px) {
+    height: 40px; 
+    margin-bottom: 10px;
+  }
 `;
 
 const BankName = styled.h1`
   font-family: 'Orbitron', sans-serif;
   font-size: 24px;
-  font-weight: normal;
   margin: 0;
-  display: ${(props) => (props.showName ? 'block' : 'none')};
   color: ${(props) => props.theme.colors.secondary};
+
+  @media (max-width: 768px) {
+    font-size: 20px; /* Adjust font size for small screens */
+  }
 `;
 
-const Header = ({ showLogo = true, showName = true, alignCenter = false, fullWidth = false }) => (
-  <HeaderContainer alignCenter={alignCenter} fullWidth={fullWidth}>
-    {showLogo && <Logo src={logo} alt="Tresdils Bank Logo" showName={showName} />}
-    {showName && <BankName>Tresdils</BankName>}
+const Header = ({ showLogo = true, alignCenter = false }) => (
+  <HeaderContainer alignCenter={alignCenter}>
+    {showLogo && <Logo src={logo} alt="Tresdils Bank Logo" />}
+    <BankName>Tresdils</BankName>
   </HeaderContainer>
 );
 

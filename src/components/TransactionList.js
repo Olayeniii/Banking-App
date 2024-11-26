@@ -33,14 +33,18 @@ const TransactionList = () => {
 
   useEffect(() => {
     // Fetch all transactions
-    const fetchTransactions = async () => {
+    const fetchTransactions = async() =>{
       try {
-        const response = await axios.get('/api/all-transactions');
-        setTransactions(response.data);
-      } catch (error) {
-        console.error('Error fetching transactions:', error);
-      }
-    };
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get('http://localhost:5000/all-transactions',{
+          headers: { Authorization: `Bearer ${token}`},
+          });
+          setTransactions(response.data);
+        } catch (error) {
+          console.error('Error fetching all transactions:', error);
+        }
+      };
+      
 
     fetchTransactions();
   }, []);
@@ -52,7 +56,7 @@ const TransactionList = () => {
         {transactions.map((transaction) => (
           <li key={transaction.id}>
             <span>{transaction.description}</span>
-            <span>${transaction.amount.toFixed(2)}</span>
+            <span>${parseFloat(transaction.amount).toLocaleString()}</span>
             <span>{transaction.date}</span>
           </li>
         ))}
